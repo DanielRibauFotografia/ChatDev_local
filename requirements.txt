@@ -1,30 +1,45 @@
-colorama==0.4.6
-Flask==2.3.2
-Flask-SocketIO==5.3.4
-importlib-metadata==6.8.0
-numpy==1.24.3
-openai==1.47.1
-regex==2023.6.3
-requests==2.31.0
+# Core dependencies (required for all modes)
 tenacity==8.2.2
 tiktoken==0.8.0
-virtualenv==20.23.0
-Werkzeug==3.0.3
-Markdown==3.4.4
-Pillow==10.3.0
-Wikipedia-API==0.6.0
-beautifulsoup4==4.12.2
-faiss-cpu==1.7.4
+requests==2.31.0
+markdown==3.4.4
+
+# OpenAI API support (required only for OpenAI models)
+openai==1.47.1
+
+# Optional dependencies for enhanced functionality
+colorama==0.4.6
+regex==2023.6.3
 pyyaml==6.0
 easydict==1.10
 
-# Local LLM dependencies (optional - install based on backend choice)
-# For HuggingFace models
+# Web interface dependencies (optional - only needed for web visualizer)
+# Flask==2.3.2
+# Flask-SocketIO==5.3.4
+# Werkzeug==3.0.3
+
+# Advanced features (optional)
+# importlib-metadata==6.8.0
+# numpy==1.24.3
+# Pillow==10.3.0
+# Wikipedia-API==0.6.0
+# beautifulsoup4==4.12.2
+# faiss-cpu==1.7.4
+# virtualenv==20.23.0
+
+# Local LLM dependencies (install only what you need)
+# ====================================================
+
+# For HuggingFace models (Option 1)
 # transformers>=4.21.0
 # torch>=2.0.0
 # accelerate>=0.20.0
 
-# For llama.cpp models  
+# For llama.cpp models (Option 2)
 # llama-cpp-python>=0.2.0
 
-# For Ollama/LocalAI (requests already included above)
+# For image placeholders (optional)
+# Pillow>=8.0.0
+
+# Note: Ollama and LocalAI are standalone applications,
+# no additional Python packages required for them.

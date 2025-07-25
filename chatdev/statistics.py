@@ -1,6 +1,12 @@
 import os
 
-import numpy as np
+try:
+    import numpy as np
+    numpy_available = True
+except ImportError:
+    numpy_available = False
+    # Use built-in sum function as fallback
+    np = None
 
 
 def prompt_cost(model_type: str, num_prompt_tokens: float, num_completion_tokens: float):
@@ -131,21 +137,30 @@ def get_info(dir, log_filepath):
         sublines = [line for line in lines if line.startswith("prompt_tokens:")]
         if len(sublines) > 0:
             nums = [int(line.split(": ")[-1]) for line in sublines]
-            num_prompt_tokens = np.sum(nums)
+            if numpy_available:
+                num_prompt_tokens = np.sum(nums)
+            else:
+                num_prompt_tokens = sum(nums)
             # print("num_prompt_tokens:", num_prompt_tokens)
 
         lines = open(log_filepath, "r", encoding="utf8").read().split("\n")
         sublines = [line for line in lines if line.startswith("completion_tokens:")]
         if len(sublines) > 0:
             nums = [int(line.split(": ")[-1]) for line in sublines]
-            num_completion_tokens = np.sum(nums)
+            if numpy_available:
+                num_completion_tokens = np.sum(nums)
+            else:
+                num_completion_tokens = sum(nums)
             # print("num_completion_tokens:", num_completion_tokens)
 
         lines = open(log_filepath, "r", encoding="utf8").read().split("\n")
         sublines = [line for line in lines if line.startswith("total_tokens:")]
         if len(sublines) > 0:
             nums = [int(line.split(": ")[-1]) for line in sublines]
-            num_total_tokens = np.sum(nums)
+            if numpy_available:
+                num_total_tokens = np.sum(nums)
+            else:
+                num_total_tokens = sum(nums)
             # print("num_total_tokens:", num_total_tokens)
 
         lines = open(log_filepath, "r", encoding="utf8").read().split("\n")

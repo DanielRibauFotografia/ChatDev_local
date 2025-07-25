@@ -18,7 +18,14 @@ from functools import wraps
 from typing import Any, Callable, List, Optional, Set, TypeVar
 
 import requests
-import tiktoken
+
+# Make tiktoken optional
+try:
+    import tiktoken
+    tiktoken_available = True
+except ImportError:
+    tiktoken = None
+    tiktoken_available = False
 
 from camel.messages import OpenAIMessage
 from camel.typing import ModelType, TaskType
@@ -76,6 +83,17 @@ def num_tokens_from_messages(
         - https://platform.openai.com/docs/models/gpt-4
         - https://platform.openai.com/docs/models/gpt-3-5
     """
+    # For local models, return a rough estimate if tiktoken is not available
+    if model in {ModelType.HUGGINGFACE, ModelType.LLAMA_CPP, ModelType.OLLAMA, ModelType.LOCALAI}:
+        # Simple estimation: count characters and divide by average chars per token
+        total_chars = sum(len(str(message.get('content', ''))) for message in messages)
+        return total_chars // 4  # Rough estimate: 4 chars per token
+    
+    if not tiktoken_available:
+        # Fallback for OpenAI models without tiktoken
+        total_chars = sum(len(str(message.get('content', ''))) for message in messages)
+        return total_chars // 4  # Rough estimate: 4 chars per token
+    
     try:
         value_for_tiktoken = model.value_for_tiktoken
         encoding = tiktoken.encoding_for_model(value_for_tiktoken)
@@ -130,6 +148,15 @@ def get_model_token_limit(model: ModelType) -> int:
         return 128000
     elif model == ModelType.GPT_4O_MINI:
         return 128000
+    # Local model limits (conservative estimates)
+    elif model == ModelType.HUGGINGFACE:
+        return 2048  # Conservative default for HuggingFace models
+    elif model == ModelType.LLAMA_CPP:
+        return 4096  # Common context size for Llama models
+    elif model == ModelType.OLLAMA:
+        return 4096  # Default Ollama context size
+    elif model == ModelType.LOCALAI:
+        return 4096  # Default LocalAI context size
     else:
         raise ValueError("Unknown model type")
 
@@ -154,7 +181,10 @@ def openai_api_key_required(func: F) -> F:
         from camel.agents.chat_agent import ChatAgent
         if not isinstance(self, ChatAgent):
             raise ValueError("Expected ChatAgent")
-        if self.model == ModelType.STUB:
+        
+        # Skip API key check for local models and stub
+        if self.model in {ModelType.STUB, ModelType.HUGGINGFACE, ModelType.LLAMA_CPP, 
+                         ModelType.OLLAMA, ModelType.LOCALAI}:
             return func(self, *args, **kwargs)
         elif 'OPENAI_API_KEY' in os.environ:
             return func(self, *args, **kwargs)

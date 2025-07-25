@@ -1,0 +1,28 @@
+# Minimal requirements for ChatDev Local Offline Operation
+# Use: pip install -r requirements-offline.txt
+
+# Core dependencies (always required)
+tenacity>=8.2.0
+tiktoken>=0.8.0
+requests>=2.31.0
+markdown>=3.4.0
+
+# Optional but recommended
+Pillow>=8.0.0
+
+# Choose ONE of the following based on your preferred backend:
+
+# Option 1: HuggingFace Transformers
+# transformers>=4.21.0
+# torch>=2.0.0
+# accelerate>=0.20.0
+
+# Option 2: llama.cpp
+# llama-cpp-python>=0.2.0
+
+# Option 3: Ollama (no Python packages needed - install Ollama separately)
+
+# Option 4: LocalAI (no Python packages needed - install LocalAI separately)
+
+# Note: You only need to install dependencies for the backend you plan to use.
+# Ollama and LocalAI are standalone applications that don't require additional Python packages.

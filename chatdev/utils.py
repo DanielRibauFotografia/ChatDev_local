@@ -6,7 +6,15 @@ import time
 import markdown
 import inspect
 from camel.messages.system_messages import SystemMessage
-from visualizer.app import send_msg
+
+# Make visualizer optional for offline mode
+try:
+    from visualizer.app import send_msg
+    visualizer_available = True
+except ImportError:
+    visualizer_available = False
+    def send_msg(*args, **kwargs):
+        pass  # No-op function when visualizer is not available
 
 
 def now():

@@ -6,7 +6,6 @@ import subprocess
 import time
 from typing import Dict
 
-import openai
 import requests
 
 from chatdev.codes import Codes
@@ -15,13 +14,20 @@ from chatdev.roster import Roster
 from chatdev.utils import log_visualize
 from ecl.memory import Memory
 
+# Make OpenAI imports optional for offline mode
+openai_available = False
+openai_new_api = False
 try:
-    from openai.types.chat.chat_completion_message_tool_call import ChatCompletionMessageToolCall
-    from openai.types.chat.chat_completion_message import FunctionCall
-
-    openai_new_api = True  # new openai api version
+    import openai
+    openai_available = True
+    try:
+        from openai.types.chat.chat_completion_message_tool_call import ChatCompletionMessageToolCall
+        from openai.types.chat.chat_completion_message import FunctionCall
+        openai_new_api = True  # new openai api version
+    except ImportError:
+        openai_new_api = False  # old openai api version
 except ImportError:
-    openai_new_api = False  # old openai api version
+    openai = None
 
 
 class ChatEnvConfig:
@@ -239,21 +245,36 @@ class ChatEnv:
                 if desc.endswith(".png"):
                     desc = desc.replace(".png", "")
                 print("{}: {}".format(filename, desc))
-                if openai_new_api:
-                    response = openai.images.generate(
-                        prompt=desc,
-                        n=1,
-                        size="256x256"
-                    )
-                    image_url = response.data[0].url
-                else:
-                    response = openai.Image.create(
-                        prompt=desc,
-                        n=1,
-                        size="256x256"
-                    )
-                    image_url = response['data'][0]['url']
-                download(image_url, filename)
+                
+                # Skip image generation if OpenAI is not available (offline mode)
+                if not openai_available:
+                    print(f"Skipping image generation for {filename} - running in offline mode")
+                    # Create a placeholder image file
+                    placeholder_path = os.path.join(self.env_dict['directory'], filename)
+                    self._create_placeholder_image(placeholder_path, desc)
+                    continue
+                
+                try:
+                    if openai_new_api:
+                        response = openai.images.generate(
+                            prompt=desc,
+                            n=1,
+                            size="256x256"
+                        )
+                        image_url = response.data[0].url
+                    else:
+                        response = openai.Image.create(
+                            prompt=desc,
+                            n=1,
+                            size="256x256"
+                        )
+                        image_url = response['data'][0]['url']
+                    download(image_url, filename)
+                except Exception as e:
+                    print(f"Error generating image {filename}: {e}")
+                    # Create a placeholder image instead
+                    placeholder_path = os.path.join(self.env_dict['directory'], filename)
+                    self._create_placeholder_image(placeholder_path, desc)
 
     def get_proposed_images_from_message(self, messages):
         def download(img_url, file_name):
@@ -290,21 +311,70 @@ class ChatEnv:
                     desc = desc.replace(".png", "")
                 print("{}: {}".format(filename, desc))
 
-                if openai_new_api:
-                    response = openai.images.generate(
-                        prompt=desc,
-                        n=1,
-                        size="256x256"
-                    )
-                    image_url = response.data[0].url
-                else:
-                    response = openai.Image.create(
-                        prompt=desc,
-                        n=1,
-                        size="256x256"
-                    )
-                    image_url = response['data'][0]['url']
+                # Skip image generation if OpenAI is not available (offline mode)
+                if not openai_available:
+                    print(f"Skipping image generation for {filename} - running in offline mode")
+                    # Create a placeholder image file
+                    placeholder_path = os.path.join(self.env_dict['directory'], filename)
+                    self._create_placeholder_image(placeholder_path, desc)
+                    continue
 
-                download(image_url, filename)
+                try:
+                    if openai_new_api:
+                        response = openai.images.generate(
+                            prompt=desc,
+                            n=1,
+                            size="256x256"
+                        )
+                        image_url = response.data[0].url
+                    else:
+                        response = openai.Image.create(
+                            prompt=desc,
+                            n=1,
+                            size="256x256"
+                        )
+                        image_url = response['data'][0]['url']
+
+                    download(image_url, filename)
+                except Exception as e:
+                    print(f"Error generating image {filename}: {e}")
+                    # Create a placeholder image instead
+                    placeholder_path = os.path.join(self.env_dict['directory'], filename)
+                    self._create_placeholder_image(placeholder_path, desc)
 
         return images
+
+    def _create_placeholder_image(self, filepath, description):
+        """Create a simple placeholder image when OpenAI image generation is not available."""
+        try:
+            from PIL import Image, ImageDraw, ImageFont
+            # Create a simple colored rectangle as placeholder
+            img = Image.new('RGB', (256, 256), color='lightgray')
+            draw = ImageDraw.Draw(img)
+            
+            # Try to use a simple font, fallback to default if not available
+            try:
+                font = ImageFont.truetype("arial.ttf", 20)
+            except:
+                try:
+                    font = ImageFont.load_default()
+                except:
+                    font = None
+            
+            # Draw text description on the image
+            text = f"Placeholder:\n{description[:30]}..."
+            if font:
+                draw.text((10, 100), text, fill='black', font=font)
+            else:
+                draw.text((10, 100), text, fill='black')
+            
+            img.save(filepath)
+            print(f"Created placeholder image: {filepath}")
+        except ImportError:
+            # If PIL is not available, create a simple text file instead
+            with open(filepath.replace('.png', '.txt'), 'w') as f:
+                f.write(f"Image placeholder: {description}\n")
+                f.write("Install Pillow (pip install Pillow) for actual placeholder images.")
+            print(f"Created text placeholder for {filepath}")
+        except Exception as e:
+            print(f"Could not create placeholder for {filepath}: {e}")

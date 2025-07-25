@@ -178,30 +178,35 @@ To get started, follow these steps:
 
 - We thank [ManindraDeMel](https://github.com/ManindraDeMel) for providing Docker support. Please see [Docker Start Guide](wiki.md#docker-start).
 
-### 🤖 Local LLM Support (Offline Mode)
+### 🤖 Local LLM Support (Offline Mode) - ⭐ NEW FEATURE ⭐
 
-ChatDev now supports running completely offline with local LLM models, perfect for privacy-conscious users and Apple Silicon Macs:
+**ChatDev Local now runs completely offline!** Perfect for privacy-conscious users and environments without internet access:
 
-**Supported Backends:**
-- **HuggingFace Transformers**: Local inference with popular models
-- **llama.cpp**: Efficient C++ implementation for GGUF models  
-- **Ollama**: Easy local model management
-- **LocalAI**: OpenAI-compatible local API
+**✅ Zero External Dependencies**
+- No OpenAI API key required
+- No internet connection needed after setup
+- Complete privacy - your code never leaves your machine
 
-**Quick Example with Ollama:**
+**Supported Offline Backends:**
+- **🦙 Ollama**: Easy setup with `ollama pull llama2`
+- **⚡ llama.cpp**: Maximum performance with GGUF models  
+- **🤗 HuggingFace**: Direct model access with Transformers
+- **🔧 LocalAI**: OpenAI-compatible local API server
+
+**Quick Offline Setup:**
 ```bash
-# Install and start Ollama
+# Install Ollama and pull a model
 ollama serve
 ollama pull llama2
 
-# Run ChatDev with local model
+# Run ChatDev completely offline
 python run.py --model OLLAMA --model_name llama2 --task "Create a calculator app"
 ```
 
 **Other Examples:**
 ```bash
-# HuggingFace with GPU acceleration (macOS)
-python run.py --model HUGGINGFACE --model_name microsoft/DialoGPT-medium --device mps
+# HuggingFace with local inference
+python run.py --model HUGGINGFACE --model_name microsoft/DialoGPT-medium --device cpu
 
 # llama.cpp with local GGUF file
 python run.py --model LLAMA_CPP --model_path ./models/llama-2-7b.gguf
@@ -210,7 +215,7 @@ python run.py --model LLAMA_CPP --model_path ./models/llama-2-7b.gguf
 python run.py --model LOCALAI --base_url http://localhost:8080
 ```
 
-📖 **Full Guide**: See [LOCAL_LLM_GUIDE.md](LOCAL_LLM_GUIDE.md) for complete setup instructions and examples.
+📖 **Complete Setup Guide**: See [OFFLINE_SETUP_GUIDE.md](OFFLINE_SETUP_GUIDE.md) for detailed installation instructions and configuration options.
 
 ## ✨️ Advanced Skills
 
