@@ -14,9 +14,6 @@
 from abc import ABC, abstractmethod
 import typing
 
-import openai
-import tiktoken
-
 from camel.typing import ModelType
 from chatdev.statistics import prompt_cost
 from chatdev.utils import log_visualize
@@ -26,6 +23,7 @@ try:
     openai_new_api = True  # new openai api version
 except ImportError:
     openai_new_api = False  # old openai api version
+    ChatCompletion = None
 
 try:
     import torch
@@ -40,6 +38,22 @@ if 'BASE_URL' in os.environ:
     BASE_URL = os.environ['BASE_URL']
 else:
     BASE_URL = None
+
+# Check if OpenAI is available - only required for OpenAI models
+openai_available = False
+try:
+    import openai
+    openai_available = True
+except ImportError:
+    openai = None
+
+# Check if tiktoken is available - fallback to simple tokenization for local models
+tiktoken_available = False
+try:
+    import tiktoken
+    tiktoken_available = True
+except ImportError:
+    tiktoken = None
 
 # Global model configuration for local models
 _LOCAL_MODEL_CONFIG = {}
@@ -81,11 +95,26 @@ class OpenAIModel(ModelBackend):
         super().__init__()
         self.model_type = model_type
         self.model_config_dict = model_config_dict
+        
+        # Check if OpenAI is available
+        if not openai_available:
+            raise ImportError("OpenAI is required for OpenAI models. Please install: pip install openai")
+        
+        # Check if API key is available
+        if not OPENAI_API_KEY:
+            raise ValueError("OPENAI_API_KEY environment variable is required for OpenAI models")
 
     def run(self, *args, **kwargs):
-        string = "\n".join([message["content"] for message in kwargs["messages"]])
-        encoding = tiktoken.encoding_for_model(self.model_type.value)
-        num_prompt_tokens = len(encoding.encode(string))
+        # Simple token counting fallback if tiktoken not available
+        if tiktoken_available:
+            string = "\n".join([message["content"] for message in kwargs["messages"]])
+            encoding = tiktoken.encoding_for_model(self.model_type.value)
+            num_prompt_tokens = len(encoding.encode(string))
+        else:
+            # Fallback: rough estimation (4 chars per token average)
+            string = "\n".join([message["content"] for message in kwargs["messages"]])
+            num_prompt_tokens = len(string) // 4
+            
         gap_between_send_receive = 15 * len(kwargs["messages"])
         num_prompt_tokens += gap_between_send_receive
 

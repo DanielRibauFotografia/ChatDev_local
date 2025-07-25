@@ -30,10 +30,27 @@ try:
     openai_new_api = True  # new openai api version
 except ImportError:
     openai_new_api = False  # old openai api version
-    print(
-        "Warning: Your OpenAI version is outdated. \n "
-        "Please update as specified in requirement.txt. \n "
-        "The old API interface is deprecated and will no longer be supported.")
+    # Only show warning if using OpenAI models
+    if __name__ == "__main__":
+        import sys
+        # Check if we're using local models
+        if '--model' in sys.argv:
+            model_index = sys.argv.index('--model') + 1
+            if model_index < len(sys.argv):
+                model_type = sys.argv[model_index]
+                if model_type in ['HUGGINGFACE', 'LLAMA_CPP', 'OLLAMA', 'LOCALAI']:
+                    # Using local models, OpenAI not needed
+                    pass
+                else:
+                    print(
+                        "Warning: Your OpenAI version is outdated. \n "
+                        "Please update as specified in requirement.txt. \n "
+                        "The old API interface is deprecated and will no longer be supported.")
+            else:
+                print(
+                    "Warning: Your OpenAI version is outdated. \n "
+                    "Please update as specified in requirement.txt. \n "
+                    "The old API interface is deprecated and will no longer be supported.")
 
 
 def get_config(company):
