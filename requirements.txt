@@ -17,3 +17,8 @@ beautifulsoup4==4.12.2
 faiss-cpu==1.7.4
 pyyaml==6.0
 easydict==1.10
+# Local LLM dependencies
+torch>=2.0.0
+transformers>=4.30.0
+accelerate>=0.20.0
+bitsandbytes>=0.39.0

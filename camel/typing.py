@@ -53,6 +53,11 @@ class ModelType(Enum):
     GPT_4O = "gpt-4o"
     GPT_4O_MINI = "gpt-4o-mini"
 
+    # Local LLM Models
+    LOCAL_CODELLAMA_7B = "codellama/CodeLlama-7b-Python-hf"
+    LOCAL_CODELLAMA_13B = "codellama/CodeLlama-13b-Python-hf"
+    LOCAL_WIZARDCODER_7B = "WizardLM/WizardCoder-Python-7B-V1.0"
+
     STUB = "stub"
 
     @property

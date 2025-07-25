@@ -13,6 +13,7 @@
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
 from abc import ABC, abstractmethod
 from typing import Any, Dict
+import time
 
 import openai
 import tiktoken
@@ -20,6 +21,7 @@ import tiktoken
 from camel.typing import ModelType
 from chatdev.statistics import prompt_cost
 from chatdev.utils import log_visualize
+from camel.local_llm import LocalLLMInterface, LocalLLMConfig
 
 try:
     from openai.types.chat import ChatCompletion
@@ -149,6 +151,71 @@ class OpenAIModel(ModelBackend):
             return response
 
 
+class LocalLLMModel(ModelBackend):
+    r"""Local LLM Model in a unified ModelBackend interface."""
+
+    def __init__(self, model_type: ModelType, model_config_dict: Dict) -> None:
+        super().__init__()
+        self.model_type = model_type
+        self.model_config_dict = model_config_dict
+        
+        # Create local LLM config from model_config_dict
+        local_config = LocalLLMConfig(
+            model_name=model_type.value,
+            max_tokens=model_config_dict.get('max_tokens', 1024),
+            temperature=model_config_dict.get('temperature', 0.7),
+        )
+        
+        # Initialize the local LLM interface
+        self.llm_interface = LocalLLMInterface(local_config)
+        
+    def run(self, *args, **kwargs):
+        """Run inference using local LLM interface."""
+        try:
+            # Extract messages from kwargs (OpenAI format)
+            messages = kwargs.get('messages', [])
+            max_tokens = kwargs.get('max_tokens', self.model_config_dict.get('max_tokens', 1024))
+            temperature = kwargs.get('temperature', self.model_config_dict.get('temperature', 0.7))
+            
+            # Call local LLM interface
+            response = self.llm_interface.chat_completion(
+                messages=messages,
+                max_tokens=max_tokens,
+                temperature=temperature
+            )
+            
+            # Log usage info (simplified)
+            log_visualize(
+                "**[Local_LLM_Usage_Info Receive]**\nmodel: {}\ncompletion_tokens: {}\n".format(
+                    self.model_type.value, 
+                    response.get('usage', {}).get('completion_tokens', 0)
+                )
+            )
+            
+            return response
+            
+        except Exception as e:
+            log_visualize(f"**[Local_LLM_Error]** {str(e)}")
+            # Return a fallback response in OpenAI format
+            return {
+                "id": "error_response",
+                "object": "chat.completion", 
+                "created": int(time.time()),
+                "model": self.model_type.value,
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": f"Error: Local LLM failed - {str(e)}"
+                        },
+                        "finish_reason": "stop"
+                    }
+                ],
+                "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+            }
+
+
 class StubModel(ModelBackend):
     r"""A dummy model used for unit tests."""
 
@@ -191,10 +258,16 @@ class ModelFactory:
             None
         }:
             model_class = OpenAIModel
+        elif model_type in {
+            ModelType.LOCAL_CODELLAMA_7B,
+            ModelType.LOCAL_CODELLAMA_13B,
+            ModelType.LOCAL_WIZARDCODER_7B
+        }:
+            model_class = LocalLLMModel
         elif model_type == ModelType.STUB:
             model_class = StubModel
         else:
-            raise ValueError("Unknown model")
+            raise ValueError(f"Unknown model: {model_type}")
 
         if model_type is None:
             model_type = default_model_type
