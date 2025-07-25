@@ -53,11 +53,20 @@ class ModelType(Enum):
     GPT_4O = "gpt-4o"
     GPT_4O_MINI = "gpt-4o-mini"
 
+    # Local LLM backends
+    HUGGINGFACE = "huggingface"
+    LLAMA_CPP = "llama-cpp"
+    OLLAMA = "ollama"
+    LOCALAI = "localai"
+
     STUB = "stub"
 
     @property
     def value_for_tiktoken(self):
-        return self.value if self.name != "STUB" else "gpt-3.5-turbo-16k-0613"
+        # Use gpt-3.5-turbo encoding for local models as a reasonable approximation
+        if self.name in ["STUB", "HUGGINGFACE", "LLAMA_CPP", "OLLAMA", "LOCALAI"]:
+            return "gpt-3.5-turbo-16k-0613"
+        return self.value
 
 
 class PhaseType(Enum):

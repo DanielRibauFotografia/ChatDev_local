@@ -178,6 +178,40 @@ To get started, follow these steps:
 
 - We thank [ManindraDeMel](https://github.com/ManindraDeMel) for providing Docker support. Please see [Docker Start Guide](wiki.md#docker-start).
 
+### 🤖 Local LLM Support (Offline Mode)
+
+ChatDev now supports running completely offline with local LLM models, perfect for privacy-conscious users and Apple Silicon Macs:
+
+**Supported Backends:**
+- **HuggingFace Transformers**: Local inference with popular models
+- **llama.cpp**: Efficient C++ implementation for GGUF models  
+- **Ollama**: Easy local model management
+- **LocalAI**: OpenAI-compatible local API
+
+**Quick Example with Ollama:**
+```bash
+# Install and start Ollama
+ollama serve
+ollama pull llama2
+
+# Run ChatDev with local model
+python run.py --model OLLAMA --model_name llama2 --task "Create a calculator app"
+```
+
+**Other Examples:**
+```bash
+# HuggingFace with GPU acceleration (macOS)
+python run.py --model HUGGINGFACE --model_name microsoft/DialoGPT-medium --device mps
+
+# llama.cpp with local GGUF file
+python run.py --model LLAMA_CPP --model_path ./models/llama-2-7b.gguf
+
+# LocalAI server
+python run.py --model LOCALAI --base_url http://localhost:8080
+```
+
+📖 **Full Guide**: See [LOCAL_LLM_GUIDE.md](LOCAL_LLM_GUIDE.md) for complete setup instructions and examples.
+
 ## ✨️ Advanced Skills
 
 For more detailed information, please refer to our [Wiki](wiki.md), where you can find:
