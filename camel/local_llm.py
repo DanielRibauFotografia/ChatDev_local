@@ -30,6 +30,7 @@ class LocalLLMConfig:
     temperature: float = 0.7
     top_p: float = 0.9
     do_sample: bool = True
+    simulation_mode: bool = False  # For testing without loading actual models
 
 
 class LocalLLMInterface:
@@ -70,6 +71,13 @@ class LocalLLMInterface:
     
     def _load_model(self):
         """Load the model and tokenizer with optimizations."""
+        # Check if we're in simulation mode
+        if self.config.simulation_mode:
+            print(f"Simulation mode: Mocking model {self.config.model_name}")
+            self.model = "mock_model"
+            self.tokenizer = "mock_tokenizer"
+            return
+            
         try:
             from transformers import AutoTokenizer, AutoModelForCausalLM
             import torch
@@ -147,6 +155,44 @@ class LocalLLMInterface:
     
     def _generate_response(self, prompt: str, max_tokens: int, temperature: float, **kwargs) -> str:
         """Generate response using the loaded model."""
+        # Check if we're in simulation mode
+        if self.config.simulation_mode:
+            # Return a simulated response based on the model type
+            if "codellama" in self.config.model_name.lower():
+                return """# Here's a Python function based on your request:
+
+def solve_problem():
+    '''
+    This function demonstrates CodeLlama's ability to generate
+    clean, well-documented Python code.
+    '''
+    print("CodeLlama generated solution")
+    return "success"
+
+# Example usage:
+if __name__ == "__main__":
+    result = solve_problem()
+    print(f"Result: {result}")"""
+            elif "wizard" in self.config.model_name.lower():
+                return """# WizardCoder Solution:
+
+class Solution:
+    def __init__(self):
+        self.name = "WizardCoder"
+    
+    def generate_code(self, requirements):
+        '''
+        WizardCoder specializes in creating optimized solutions
+        '''
+        return f"Optimized solution for: {requirements}"
+
+# Implementation
+solution = Solution()
+result = solution.generate_code("user requirements")
+print(result)"""
+            else:
+                return f"This is a simulated response from {self.config.model_name}. The model would generate appropriate code here."
+        
         try:
             import torch
             
