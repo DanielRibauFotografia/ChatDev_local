@@ -17,3 +17,14 @@ beautifulsoup4==4.12.2
 faiss-cpu==1.7.4
 pyyaml==6.0
 easydict==1.10
+
+# Local LLM dependencies (optional - install based on backend choice)
+# For HuggingFace models
+# transformers>=4.21.0
+# torch>=2.0.0
+# accelerate>=0.20.0
+
+# For llama.cpp models  
+# llama-cpp-python>=0.2.0
+
+# For Ollama/LocalAI (requests already included above)

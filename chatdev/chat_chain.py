@@ -5,10 +5,12 @@ import os
 import shutil
 import time
 from datetime import datetime
+from typing import Dict
 
 from camel.agents import RolePlaying
 from camel.configs import ChatGPTConfig
 from camel.typing import TaskType, ModelType
+from camel.model_backend import set_local_model_config
 from chatdev.chat_env import ChatEnv, ChatEnvConfig
 from chatdev.statistics import get_info
 from camel.web_spider import modal_trans
@@ -29,6 +31,7 @@ class ChatChain:
                  project_name: str = None,
                  org_name: str = None,
                  model_type: ModelType = ModelType.GPT_3_5_TURBO,
+                 model_config: Dict = None,
                  code_path: str = None) -> None:
         """
 
@@ -39,6 +42,7 @@ class ChatChain:
             task_prompt: the user input prompt for software
             project_name: the user input name for software
             org_name: the organization name of the human user
+            model_config: configuration dict for local models
         """
 
         # load config file
@@ -48,7 +52,12 @@ class ChatChain:
         self.project_name = project_name
         self.org_name = org_name
         self.model_type = model_type
+        self.model_config = model_config or {}
         self.code_path = code_path
+        
+        # Set global model configuration for local models
+        if model_config:
+            set_local_model_config(model_config)
 
         with open(self.config_path, 'r', encoding="utf8") as file:
             self.config = json.load(file)
@@ -231,7 +240,7 @@ class ChatChain:
             f.write(self.task_prompt_raw)
 
         preprocess_msg = "**[Preprocessing]**\n\n"
-        chat_gpt_config = ChatGPTConfig()
+        chat_gpt_config = ChatGPTConfig(**self.model_config) if self.model_config else ChatGPTConfig()
 
         preprocess_msg += "**ChatDev Starts** ({})\n\n".format(self.start_time)
         preprocess_msg += "**Timestamp**: {}\n\n".format(self.start_time)

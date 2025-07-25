@@ -63,6 +63,15 @@ class ChatGPTConfig:
         user (str, optional): A unique identifier representing your end-user,
             which can help OpenAI to monitor and detect abuse.
             (default: :obj:`""`)
+
+        # Local model specific parameters
+        model_name (str, optional): Name of the local model for HuggingFace/Ollama/LocalAI
+        model_path (str, optional): Path to model file for llama.cpp
+        base_url (str, optional): Base URL for API-based local models
+        device (str, optional): Device for local model inference
+        max_length (int, optional): Maximum context length for local models
+        n_ctx (int, optional): Context size for llama.cpp
+        n_gpu_layers (int, optional): Number of GPU layers for llama.cpp
     """
     temperature: float = 0.2  # openai default: 1.0
     top_p: float = 1.0
@@ -74,3 +83,12 @@ class ChatGPTConfig:
     frequency_penalty: float = 0.0
     logit_bias: Dict = field(default_factory=dict)
     user: str = ""
+    
+    # Local model specific parameters
+    model_name: str = ""
+    model_path: str = ""
+    base_url: str = ""
+    device: str = "auto"
+    max_length: int = 1024
+    n_ctx: int = 2048
+    n_gpu_layers: int = 0
